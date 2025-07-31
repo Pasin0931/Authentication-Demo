@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { userDb } from "@/lib/db"
+import { verifyPassword, gennerateToken } from '@/lib/auth'
 
 export async function POST(request) {
     try {
@@ -15,9 +16,21 @@ export async function POST(request) {
             return NextResponse.json({ error: "User not found" })
         }
 
-        if (password !== user.password) {
-            return NextResponse.json({ error: "Password is incorrect" }, { status: 401 })
+        // Check raw password (not decrypt password)
+        // if (password !== user.password) {
+        //     return NextResponse.json({ error: "Password is incorrect" }, { status: 401 })
+        // }
+
+        //--------------------------------------
+
+        const isValidPassword = verifyPassword(password, user.password)
+        if (!isValidPassword) {
+            return NextResponse.json({ error: "Invalid password" }, { status: 401 })
         }
+
+        const token = await gennerateToken({userId: user.id, email: user.email, name: user.name})
+
+        //--------------------------------------
 
         return NextResponse.json({
             message: "Login successful",
@@ -25,7 +38,8 @@ export async function POST(request) {
                 id: user.id,
                 email: user.email,
                 name: user.name,
-            }
+            },
+            token
         })
 
     } catch (error) {

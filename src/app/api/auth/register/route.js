@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { userDb } from "@/lib/db"
+import { hashedPassword, gennerateToken } from "@/lib/auth"
+import { stat } from "fs"
 
 export async function POST(request) {
     try {
@@ -19,11 +21,27 @@ export async function POST(request) {
             return NextResponse.json({ error: "User already exist" }, { status: 400 })
         }
 
-        const result = userDb.createUser(email, password, name)
+        //--------------------------------------
+
+        const thisHashedPassword = await hashedPassword(password)
+
+        //--------------------------------------
+
+        const result = userDb.createUser(email, thisHashedPassword, name)
         console.log("result :", result)
         if (result.changes > 0) {
-            return NextResponse.json({ message: "User registered successfuly" }, { user: { id: result.lastInsertRowid, email, name } }
+
+            //--------------------------------------
+            const token = await gennerateToken(
+                {
+                    userId: result.lastInsertRowid,
+                    email,
+                    name
+                }
             )
+            //--------------------------------------
+
+            return NextResponse.json({ message: "User registered successfuly", user: { id: result.lastInsertRowid, email, name }, token }, { status: 200 })
         }
 
     } catch (error) {
