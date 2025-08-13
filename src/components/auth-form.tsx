@@ -5,12 +5,19 @@ import { Card, CardContent, CardFooter, CardTitle, CardHeader, CardDescription }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
-import { ReactFormState } from "react-dom/client"
+import { Loader2 } from "lucide-react"
 
-export default function AuthForm() {
+interface AuthFormProps {
+    onAuthSuccess: (token: string, user: any) => void
+}
+
+export default function AuthForm({ onAuthSuccess }: AuthFormProps) {
 
     const [isLogin, setIsLogin] = useState(false)
     const [formData, setFormData] = useState({ email: "", password: "", name: "" })
+
+    const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -30,9 +37,9 @@ export default function AuthForm() {
             if (res.ok) {
                 console.log(res.status)
                 console.log(data)
-                // onAuthSuccess(data.token, data.user)
+                onAuthSuccess(data.token, data.user)
             } else {
-                // setError(data.error || "Authentication Failed")
+                setError(data.error || "Authentication Failed")
             }
 
         } catch (error) {
@@ -68,8 +75,8 @@ export default function AuthForm() {
                             <div className="space-y-2 mb-1">
                                 <Label htmlFor="name">Full name</Label>
                                 <Input id="name" name="name" type="text" required={!isLogin}
-                                     value={formData.name}
-                                     onChange={handleInputChange}
+                                    value={formData.name}
+                                    onChange={handleInputChange}
                                     placeholder="Enter your full name"
                                 />
                             </div>
@@ -77,8 +84,8 @@ export default function AuthForm() {
                         <div className="space-y-2 mb-1">
                             <Label htmlFor="email">Email</Label>
                             <Input id="email" name="email" type="email" required
-                                 value={formData.email}
-                                 onChange={handleInputChange}
+                                value={formData.email}
+                                onChange={handleInputChange}
                                 placeholder="Enter your email"
                             />
                         </div>
@@ -86,20 +93,25 @@ export default function AuthForm() {
                         <div className="space-y-2 mb-1">
                             <Label htmlFor="password">Password</Label>
                             <Input id="password" name="password" type="password" required
-                                 value={formData.password}
-                                 onChange={handleInputChange}
+                                value={formData.password}
+                                onChange={handleInputChange}
                                 placeholder="Enter your password"
                             />
                         </div>
 
                         <Button type="submit" className="w-full mt-4">
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                             {isLogin ? "Login" : "Register"}
                         </Button>
 
                     </form>
 
                     <div className="mt-4 text-center">
-                        <Button variant={"link"} className="text-sm" onClick={() => setIsLogin(!isLogin)}>
+                        <Button variant={"link"} className="text-sm" onClick={() => {
+                            setIsLogin(!isLogin)
+                            setError("")
+                            setFormData({ email: "", password: "", name: "" })
+                        }}>
                             {isLogin ? "Don't have an account ? Sign up" : "Already have an account ? Sign in"}
                         </Button>
                     </div>
